@@ -1,5 +1,12 @@
 # Standardize Agent Workspace
 
+> [!IMPORTANT]  
+> This project is not provided by Google and does not come with any support or warranties. While the author is an employee at Google, this is a personal project and not an officially supported Google product. This project serves as a utility and reference implementation for standardizing AI coding agent workspaces across Claude Code, OpenAI Codex, and Antigravity.  
+> Though functional, you may wish to adapt the configuration and scripts to suit your organization's specific development environments.  
+
+> [!IMPORTANT]  
+> Accurate as of 10/22/2026  
+
 A universal developer skill and Python CLI that upgrades code repositories to the open **Linux Foundation Agentic AI Foundation (AAIF)** standard. 
 
 Enables **Claude Code**, **OpenAI Codex**, and **Antigravity** to operate simultaneously against a single source of truth without configuration drift or duplicate file maintenance.
