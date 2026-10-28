@@ -325,6 +325,48 @@ class TestStandardizeScenarios(unittest.TestCase):
         self.assertIn("[mcp_servers.custom-script.env]", codex_toml)
         self.assertIn('API_TOKEN = "secret_abc_123"', codex_toml)
 
+    # --------------------------------------------------------------------------
+    # Scenario 8: Cursor and Claude Code Harmonization
+    # --------------------------------------------------------------------------
+    def test_scenario_8_cursor_and_claude_consolidation(self):
+        """Tests standardizing a brownfield repo containing both .cursorrules and CLAUDE.md."""
+        # 1. Setup repo with both Cursor and Claude rules
+        cursorrules = self.root / ".cursorrules"
+        cursorrules.write_text("# Cursor Rules\n- Use Go 1.22 conventions\n", encoding="utf-8")
+
+        claude_md = self.root / "CLAUDE.md"
+        claude_md.write_text("# Claude Guidelines\n- Run go test ./... before push\n", encoding="utf-8")
+
+        # 2. Dry run detects conflict between differing rules
+        res_dry = self._run_cli("--dry-run", "--json")
+        self.assertEqual(res_dry.returncode, 2)
+        conflict_data = json.loads(res_dry.stdout)
+        self.assertEqual(conflict_data["status"], "conflict")
+        self.assertIn(".cursorrules", conflict_data["conflict_files"])
+        self.assertIn("CLAUDE.md", conflict_data["conflict_files"])
+
+        # 3. Apply with strategy=merge unifies both and generates symlinks
+        res_merge = self._run_cli("--apply", "--strategy", "merge", "--json")
+        self.assertEqual(res_merge.returncode, 0)
+
+        # Canonical AGENTS.md contains rules from both tools
+        agents_md = self.root / "AGENTS.md"
+        self.assertTrue(agents_md.is_file())
+        agents_txt = agents_md.read_text(encoding="utf-8")
+        self.assertIn("Use Go 1.22 conventions", agents_txt)
+        self.assertIn("Run go test ./... before push", agents_txt)
+
+        # Both tools are now symlinked to AGENTS.md
+        self.assertTrue(cursorrules.is_symlink())
+        self.assertEqual(os.readlink(cursorrules), "AGENTS.md")
+        self.assertTrue(claude_md.is_symlink())
+        self.assertEqual(os.readlink(claude_md), "AGENTS.md")
+
+        # Antigravity compatibility symlink also generated
+        gemini_md = self.root / "GEMINI.md"
+        self.assertTrue(gemini_md.is_symlink())
+        self.assertEqual(os.readlink(gemini_md), "AGENTS.md")
+
 
 if __name__ == "__main__":
     unittest.main()

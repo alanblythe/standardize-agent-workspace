@@ -1,16 +1,16 @@
 ---
 name: standardize-agent-workspace
-description: Standardize and harmonize AI coding agent configurations across Claude Code, OpenAI Codex, and Antigravity into the Linux Foundation open standard (AGENTS.md, .agents/skills/, root .mcp.json) with dry-run diff preview and interactive conflict resolution. Use when a customer wants to migrate, convert, or dual-stack Claude Code or Codex with Antigravity, standardize agent rules, or resolve divergent MCP and skill configurations.
+description: Standardize and harmonize AI coding agent configurations across Cursor, Claude Code, OpenAI Codex, and Antigravity into the Linux Foundation open standard (AGENTS.md, .cursorrules symlink, .agents/skills/, root .mcp.json) with dry-run diff preview and interactive conflict resolution. Use when a customer wants to migrate, convert, or dual-stack Cursor, Claude Code, or Codex with Antigravity, standardize agent rules, or resolve divergent MCP and skill configurations.
 ---
 
 # Standardize Agent Workspace
 
-Upgrades a project repository to the open, vendor-neutral **Linux Foundation Agentic AI Foundation (AAIF)** standard so that **Claude Code**, **OpenAI Codex**, and **Antigravity** operate simultaneously against a single source of truth without configuration drift.
+Upgrades a project repository to the open, vendor-neutral **Linux Foundation Agentic AI Foundation (AAIF)** standard so that **Cursor**, **Claude Code**, **OpenAI Codex**, and **Antigravity** operate simultaneously against a single source of truth without configuration drift.
 
 ## Architectural Invariants
 
 1. **Workspace Instructions**: Canonical truth is **`AGENTS.md`** at the repo root.
-   - `CLAUDE.md` and `GEMINI.md` are symlinked to `AGENTS.md` to prevent Claude Code's shadow-precedence bug (where Claude silently ignores `AGENTS.md` if `CLAUDE.md` exists).
+   - `CLAUDE.md`, `GEMINI.md`, and `.cursorrules` are symlinked to `AGENTS.md` to prevent shadow-precedence drift and ensure Cursor, Claude Code, and Antigravity developers share identical instructions.
 2. **Skills Directory**: Consolidated under **`.agents/skills/<name>/SKILL.md`**.
    - Universal target supported natively by Codex, Antigravity, and `npx skills add`.
 3. **Model Context Protocol (MCP)**: Canonical source is root **`.mcp.json`**.
@@ -48,7 +48,8 @@ If the dry run returns `"status": "conflict"` (e.g., both `CLAUDE.md` and `GEMIN
 
 1. **Do not guess or overwrite.**
 2. Inspect the conflicting files and prompt the user to choose their strategy:
-   * **(Recommended) Merge into Unified Standard**: Synthesize a unified `AGENTS.md` draft combining unique rules and deduplicating common build/test scripts. Write the draft to a temporary scratch file and pass `--merged-file <path>`.
+   * **(Recommended) Merge into Unified Standard**: Synthesize a unified `AGENTS.md` draft combining unique rules and deduplicating common build/test scripts. Write the draft to a temporary scratch file and pass `--merged-file <path>`, or pass `--strategy merge`.
+   * **Use Cursor (`.cursorrules`) as Base**: Pass `--strategy pick:cursor`.
    * **Use Claude Code (`CLAUDE.md`) as Base**: Pass `--strategy pick:claude`.
    * **Use Antigravity (`GEMINI.md`) as Base**: Pass `--strategy pick:gemini`.
 

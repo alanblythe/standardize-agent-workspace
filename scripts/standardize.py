@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standardize AI coding agent configurations across Claude Code, OpenAI Codex, and Antigravity.
+"""Standardize AI coding agent configurations across Cursor, Claude Code, OpenAI Codex, and Antigravity.
 
 Unifies workspace instructions into AGENTS.md, skills into .agents/skills/,
 and compiles Model Context Protocol (MCP) definitions into each agent's
@@ -92,7 +92,7 @@ class WorkspaceStandardizer:
         audit = WorkspaceAudit(root=self.root)
 
         # 1. Audit instruction files
-        candidates = ["CLAUDE.md", "GEMINI.md", "AGENTS.md"]
+        candidates = ["CLAUDE.md", "GEMINI.md", "AGENTS.md", ".cursorrules"]
         found_instructions: Dict[str, str] = {}
         for name in candidates:
             p = self.root / name
@@ -215,6 +215,8 @@ class WorkspaceStandardizer:
             chosen_content = audit.instructions.get("CLAUDE.md")
         elif strategy == "pick:gemini":
             chosen_content = audit.instructions.get("GEMINI.md")
+        elif strategy == "pick:cursor":
+            chosen_content = audit.instructions.get(".cursorrules")
         elif strategy == "pick:agents":
             chosen_content = audit.instructions.get("AGENTS.md")
         elif strategy == "merge":
@@ -226,15 +228,17 @@ class WorkspaceStandardizer:
                 chosen_content = audit.instructions["CLAUDE.md"]
             elif "GEMINI.md" in audit.instructions and not audit.has_conflict:
                 chosen_content = audit.instructions["GEMINI.md"]
+            elif ".cursorrules" in audit.instructions and not audit.has_conflict:
+                chosen_content = audit.instructions[".cursorrules"]
             elif audit.has_conflict:
                 raise ValueError(
                     f"Conflict detected between instruction files: {', '.join(audit.conflict_details)}. "
-                    "Must specify --strategy (pick:claude, pick:gemini, pick:agents, or merge)."
+                    "Must specify --strategy (pick:claude, pick:gemini, pick:cursor, pick:agents, or merge)."
                 )
             else:
                 chosen_content = (
                     "# Repository Agent Guidelines\n\n"
-                    "Universal instructions for AI coding agents (Claude Code, OpenAI Codex, Antigravity).\n"
+                    "Universal instructions for AI coding agents (Cursor, Claude Code, OpenAI Codex, Antigravity).\n"
                 )
 
         if chosen_content is not None:
@@ -252,8 +256,8 @@ class WorkspaceStandardizer:
                     )
                 )
 
-        # 2. Plan symlinks (CLAUDE.md -> AGENTS.md, GEMINI.md -> AGENTS.md)
-        for link_name in ["CLAUDE.md", "GEMINI.md"]:
+        # 2. Plan symlinks (CLAUDE.md -> AGENTS.md, GEMINI.md -> AGENTS.md, .cursorrules -> AGENTS.md)
+        for link_name in ["CLAUDE.md", "GEMINI.md", ".cursorrules"]:
             link_path = self.root / link_name
             # If it's already a correct symlink, skip
             if link_path.is_symlink() and os.readlink(link_path) == "AGENTS.md":
@@ -434,7 +438,7 @@ class WorkspaceStandardizer:
         """Heuristic merge combining distinct sections across instruction files."""
         lines: List[str] = [
             "# Universal Agent Guidelines (AGENTS.md)\n",
-            "This repository standardizes AI coding agent instructions across Claude Code, OpenAI Codex, and Antigravity.\n",
+            "This repository standardizes AI coding agent instructions across Cursor, Claude Code, OpenAI Codex, and Antigravity.\n",
         ]
         seen_headers: Set[str] = set()
 
@@ -475,7 +479,7 @@ class WorkspaceStandardizer:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Standardize AI coding agent configurations across Claude Code, OpenAI Codex, and Antigravity."
+        description="Standardize AI coding agent configurations across Cursor, Claude Code, OpenAI Codex, and Antigravity."
     )
     parser.add_argument(
         "--root",
@@ -497,7 +501,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--strategy",
-        choices=["auto", "pick:claude", "pick:gemini", "pick:agents", "merge"],
+        choices=["auto", "pick:claude", "pick:gemini", "pick:cursor", "pick:agents", "merge"],
         default="auto",
         help="Conflict resolution strategy if multiple differing instruction files exist.",
     )
@@ -514,6 +518,7 @@ def main() -> int:
     )
 
     args = parser.parse_args()
+    args.root = args.root.resolve()
     standardizer = WorkspaceStandardizer(args.root)
 
     try:
